@@ -5,45 +5,77 @@ body {
     text-align: center;
     margin: 0;
     padding: 0;
+    height: 100vh; /* Висота на весь екран */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .butterfly {
-    width: 200px;
+    width: 50vw; /* 50% ширини екрану */
+    max-width: 200px; /* Максимальна ширина */
     height: auto;
-    margin-bottom: 20px;
+    margin-bottom: 5vh; /* Відступ знизу 5% від висоти екрану */
 }
 
 button {
     padding: 10px 20px;
-    margin: 20px;
+    margin: 2vh; /* Відступ між кнопками */
     border: none;
     border-radius: 5px;
     background-color: grey;
     color: white;
     cursor: pointer;
+    font-size: 4vw; /* Розмір шрифту відносно ширини екрану */
+    max-width: 80vw; /* Максимальна ширина кнопки */
 }
 
 .menu-button {
-    width: 100px;
-    height: 50px;
-    margin: 10px;
+    width: 25vw; /* Ширина кнопки 25% від ширини екрану */
+    height: 10vh; /* Висота кнопки 10% від висоти екрану */
+    margin: 2vh; /* Відступ між кнопками */
+    font-size: 4vw;
+}
+
+.back-button {
+    position: absolute;
+    top: 2vh; /* Відступ зверху 2% від висоти екрану */
+    left: 2vw; /* Відступ зліва 2% від ширини екрану */
+    background-color: grey;
+    color: white;
+    border: none;
+    padding: 1vh 2vw; /* Відносні одиниці виміру для адаптивності */
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 4vw;
 }
 
 .level {
-    font-size: 24px;
-    margin-bottom: 10px;
+    font-size: 6vw; /* Розмір шрифту відносно ширини екрану */
+    margin-bottom: 2vh; /* Відступ знизу */
 }
 
 .progress-bar {
-    width: 200px;
-    height: 20px;
+    width: 80vw; /* Ширина прогрес-бару 80% від ширини екрану */
+    height: 5vh; /* Висота прогрес-бару 5% від висоти екрану */
     background-color: white;
     border-radius: 10px;
-    margin-bottom: 30px;
+    margin-bottom: 5vh;
 }
 
 .progress {
-    width: 60%;
+    width: 60%; /* Ширина заповнення прогрес-бару */
     height: 100%;
     background-color: grey;
+}
+
+/* Медіа-запити для ще більшої адаптивності */
+@media (max-width: 600px) {
+    button {
+        font-size: 5vw; /* Збільшуємо розмір шрифту для маленьких екранів */
+    }
+    .menu-button {
+        width: 30vw; /* Збільшуємо розмір кнопок для маленьких екранів */
+    }
 }

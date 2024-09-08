@@ -1,4 +1,3 @@
-// Перевірка при завантаженні сторінки
 window.onload = function() {
     if (localStorage.getItem("butterflyClaimed")) {
         document.getElementById("main-screen").style.display = "none";
@@ -8,7 +7,6 @@ window.onload = function() {
     }
 };
 
-// Подія на натискання кнопки "Click"
 document.getElementById("click-button").addEventListener("click", function() {
     if (!localStorage.getItem("butterflyClaimed")) {
         localStorage.setItem("butterflyClaimed", "true");
@@ -36,7 +34,6 @@ function openFriends() {
 function openTasks() {
     document.getElementById("interface-screen").style.display = "none";
     document.getElementById("tasks-screen").style.display = "block";
-    // Load tasks from localStorage or default tasks
     const tasks = JSON.parse(localStorage.getItem("tasks")) || [
         { id: 1, description: "Complete Task 1", points: 10 },
         { id: 2, description: "Complete Task 2", points: 20 }
@@ -49,6 +46,13 @@ function openMarket() {
     document.getElementById("market-screen").style.display = "block";
 }
 
+function goBack() {
+    document.getElementById("friends-screen").style.display = "none";
+    document.getElementById("tasks-screen").style.display = "none";
+    document.getElementById("market-screen").style.display = "none";
+    document.getElementById("interface-screen").style.display = "block";
+}
+
 function generateReferralCode() {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789';
     let result = '';
@@ -58,7 +62,6 @@ function generateReferralCode() {
     return result;
 }
 
-// Example function for tracking referrals
 function addFriend(friendName) {
     const friendsList = JSON.parse(localStorage.getItem("friendsList")) || [];
     friendsList.push({ name: friendName });
@@ -72,7 +75,6 @@ function updatePoints(points) {
     localStorage.setItem("points", currentPoints);
 }
 
-// Example function for admin to update tasks
 function updateTasks(newTasks) {
     localStorage.setItem("tasks", JSON.stringify(newTasks));
 }
