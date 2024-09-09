@@ -1,58 +1,35 @@
-window.onload = function() {
-    if (localStorage.getItem("butterflyClaimed")) {
-        document.getElementById("main-screen").style.display = "none";
-        document.getElementById("interface-screen").style.display = "block";
-    } else {
-        document.getElementById("main-screen").style.display = "block";
-    }
-};
+// Функції для роботи з базою даних через LocalStorage
+function saveToDatabase(data) {
+    localStorage.setItem("userData", JSON.stringify(data));
+}
 
-document.getElementById("click-button").addEventListener("click", function() {
-    if (!localStorage.getItem("butterflyClaimed")) {
-        localStorage.setItem("butterflyClaimed", "true");
-        document.getElementById("main-screen").style.display = "none";
-        document.getElementById("interface-screen").style.display = "block";
-    } else {
-        alert("You have already claimed your butterfly!");
-    }
+function loadFromDatabase() {
+    return JSON.parse(localStorage.getItem("userData")) || null;
+}
+
+// Авторизація через Telegram
+function telegramAuth(userInfo) {
+    const user = {
+        id: userInfo.id,
+        name: userInfo.first_name,
+        points: 0,
+        level: 1,
+        friends: 0,
+        tonBalance: 0,
+        referralCode: generateReferralCode()
+    };
+    saveToDatabase(user);
+    document.getElementById("auth-screen").style.display = "none";
+    document.getElementById("main-screen").style.display = "block";
+}
+
+// Симуляція Telegram авторизації
+document.getElementById("auth-button").addEventListener("click", function() {
+    const mockTelegramResponse = { id: "123456", first_name: "John" };
+    telegramAuth(mockTelegramResponse);
 });
 
-function openFriends() {
-    const referralCode = generateReferralCode();
-    document.getElementById("interface-screen").style.display = "none";
-    document.getElementById("friends-screen").style.display = "block";
-    document.getElementById("referral-link").textContent = `Your referral link: t.me/wellact_bot/ref=${referralCode}`;
-    
-    const friendsList = JSON.parse(localStorage.getItem("friendsList")) || [];
-    if (friendsList.length === 0) {
-        document.getElementById("friends-list").textContent = "You haven't invited any users.";
-    } else {
-        document.getElementById("friends-list").innerHTML = friendsList.map(friend => `<p>${friend.name}</p>`).join("");
-    }
-}
-
-function openTasks() {
-    document.getElementById("interface-screen").style.display = "none";
-    document.getElementById("tasks-screen").style.display = "block";
-    const tasks = JSON.parse(localStorage.getItem("tasks")) || [
-        { id: 1, description: "Complete Task 1", points: 10 },
-        { id: 2, description: "Complete Task 2", points: 20 }
-    ];
-    document.getElementById("tasks-list").innerHTML = tasks.map(task => `<p>${task.description} - ${task.points} points</p>`).join("");
-}
-
-function openMarket() {
-    document.getElementById("interface-screen").style.display = "none";
-    document.getElementById("market-screen").style.display = "block";
-}
-
-function goBack() {
-    document.getElementById("friends-screen").style.display = "none";
-    document.getElementById("tasks-screen").style.display = "none";
-    document.getElementById("market-screen").style.display = "none";
-    document.getElementById("interface-screen").style.display = "block";
-}
-
+// Генерація унікального реферального коду
 function generateReferralCode() {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789';
     let result = '';
@@ -62,19 +39,88 @@ function generateReferralCode() {
     return result;
 }
 
-function addFriend(friendName) {
-    const friendsList = JSON.parse(localStorage.getItem("friendsList")) || [];
-    friendsList.push({ name: friendName });
-    localStorage.setItem("friendsList", JSON.stringify(friendsList));
-    updatePoints(10); // Add points for referral
+// Функція Claim
+document.getElementById("click-button").addEventListener("click", function() {
+    document.getElementById("main-screen").style.display = "none";
+    document.getElementById("interface-screen").style.display = "block";
+});
+
+// Система рівнів і прогрес бару
+function updateLevel(points) {
+    const userData = loadFromDatabase();
+    let requiredPoints = (userData.level) * 5;
+    userData.points += points;
+
+    if (userData.points >= requiredPoints) {
+        userData.level += 1;
+        userData.points = 0;
+        requiredPoints = (userData.level) * 5;
+    }
+
+    const progressPercentage = (userData.points / requiredPoints) * 100;
+    document.querySelector(".progress").style.width = `${progressPercentage}%`;
+    document.querySelector(".level").textContent = `${userData.level} LVL`;
+
+    saveToDatabase(userData);
 }
 
-function updatePoints(points) {
-    let currentPoints = parseInt(localStorage.getItem("points")) || 0;
-    currentPoints += points;
-    localStorage.setItem("points", currentPoints);
+// Завдання
+function openTasks() {
+    document.getElementById("interface-screen").style.display = "none";
+    document.getElementById("tasks-screen").style.display = "block";
+
+    const tasks = [
+        { id: 1, description: "Subscribe to Telegram Channel", points: 10 }
+    ];
+    document.getElementById("tasks-list").innerHTML = tasks.map(task => `<p>${task.description} - ${task.points} points</p>`).join("");
 }
 
-function updateTasks(newTasks) {
-    localStorage.setItem("tasks", JSON.stringify(newTasks));
+// Lucky Wheel
+function openWheel() {
+    document.getElementById("interface-screen").style.display = "none";
+    document.getElementById("wheel-screen").style.display = "block";
+    setupWheel();
+}
+
+function setupWheel() {
+    const canvas = document.getElementById("wheel-canvas");
+    const ctx = canvas.getContext("2d");
+    const segments = ["1 point", "5 points", "10 points", "20 points", "50 points"];
+    let angle = 0;
+
+    function drawWheel() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < segments.length; i++) {
+            ctx.beginPath();
+            ctx.moveTo(200, 200);
+            ctx.arc(200, 200, 200, angle, angle + Math.PI / 3);
+            ctx.fillStyle = i % 2 === 0 ? "red" : "blue";
+            ctx.fill();
+            angle += Math.PI / 3;
+        }
+    }
+    drawWheel();
+}
+
+document.getElementById("spin-button").addEventListener("click", function() {
+    const points = Math.floor(Math.random() * 50) + 1;
+    updateLevel(points);
+});
+
+// Функція для повернення до інтерфейсу
+function goBack() {
+    document.getElementById("friends-screen").style.display = "none";
+    document.getElementById("tasks-screen").style.display = "none";
+    document.getElementById("market-screen").style.display = "none";
+    document.getElementById("wheel-screen").style.display = "none";
+    document.getElementById("interface-screen").style.display = "block";
+}
+
+// Друзі
+function openFriends() {
+    document.getElementById("interface-screen").style.display = "none";
+    document.getElementById("friends-screen").style.display = "block";
+
+    const userData = loadFromDatabase();
+    document.getElementById("referral-link").textContent = `Your referral link: t.me/wellact_bot/ref=${userData.referralCode}`;
 }
