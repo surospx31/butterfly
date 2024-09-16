@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wellact Mini App</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
     <!-- Екран авторизації -->
     <div id="auth-screen">
         <h1>Authorize via Telegram</h1>
-        <a href="https://t.me/devionsxtest_bot?start=auth" id="auth-button">Authorize</a>
+        <button id="auth-button">Authorize</button>
     </div>
 
     <!-- Основний екран з бабочкою -->
@@ -40,7 +41,9 @@
         <button class="back-button" onclick="goBack()">← Back</button>
         <h2>Your Friends</h2>
         <p id="referral-link">Your referral link: </p>
-        <div id="friends-list"></div>
+        <div id="friends-list">
+            <!-- Список друзів буде динамічно додаватися сюди -->
+        </div>
     </div>
 
     <!-- Сторінка завдань -->
@@ -50,20 +53,6 @@
         <div id="tasks-list">
             <!-- Завдання будуть тут -->
         </div>
-    </div>
-
-    <!-- Сторінка маркету -->
-    <div id="market-screen" style="display:none;">
-        <button class="back-button" onclick="goBack()">← Back</button>
-        <h2>Coming Soon...</h2>
-    </div>
-
-    <!-- Сторінка Lucky Wheel -->
-    <div id="wheel-screen" style="display:none;">
-        <button class="back-button" onclick="goBack()">← Back</button>
-        <h2>Spin the Wheel!</h2>
-        <canvas id="wheel-canvas" width="400" height="400"></canvas>
-        <button id="spin-button">SPIN</button>
     </div>
 
     <script src="script.js"></script>

@@ -1,32 +1,34 @@
-// Функції для роботи з базою даних через LocalStorage
-function saveToDatabase(data) {
-    localStorage.setItem("userData", JSON.stringify(data));
-}
-
-function loadFromDatabase() {
-    return JSON.parse(localStorage.getItem("userData")) || null;
-}
-
-// Авторизація через Telegram
-function telegramAuth(userInfo) {
-    const user = {
-        id: userInfo.id,
-        name: userInfo.first_name,
-        points: 0,
-        level: 1,
-        friends: 0,
-        tonBalance: 0,
-        referralCode: generateReferralCode()
-    };
-    saveToDatabase(user);
-    document.getElementById("auth-screen").style.display = "none";
-    document.getElementById("main-screen").style.display = "block";
-}
-
-// Симуляція Telegram авторизації
 document.getElementById("auth-button").addEventListener("click", function() {
-    const mockTelegramResponse = { id: "123456", first_name: "John" };
-    telegramAuth(mockTelegramResponse);
+    const initData = window.Telegram.WebApp.initData;
+    const user = window.Telegram.WebApp.initDataUnsafe.user;
+    const referralCode = window.Telegram.WebApp.initDataUnsafe.start_param; // Зчитуємо реферальний код
+
+    if (user) {
+        console.log("Ім'я користувача: ", user.first_name);
+        const userData = {
+            id: user.id,
+            name: user.first_name,
+            points: 0,
+            level: 1,
+            friends: 0,
+            tonBalance: 0,
+            referralCode: generateReferralCode(),
+            friendsList: [],
+            referredBy: referralCode || null,  // Якщо користувач прийшов за реферальним кодом
+        };
+
+        saveToDatabase(userData);
+
+        document.getElementById("auth-screen").style.display = "none";
+        document.getElementById("main-screen").style.display = "block";
+
+        if (referralCode) {
+            console.log(`Користувача запросив ${referralCode}`);
+            processReferral(referralCode, userData.id);
+        }
+    } else {
+        alert("Не вдалося отримати дані користувача.");
+    }
 });
 
 // Генерація унікального реферального коду
@@ -39,88 +41,81 @@ function generateReferralCode() {
     return result;
 }
 
-// Функція Claim
-document.getElementById("click-button").addEventListener("click", function() {
-    document.getElementById("main-screen").style.display = "none";
-    document.getElementById("interface-screen").style.display = "block";
-});
+// Збереження даних користувача
+function saveToDatabase(userData) {
+    let allUsers = JSON.parse(localStorage.getItem("allUsers")) || [];
+    const existingUserIndex = allUsers.findIndex(user => user.id === userData.id);
 
-// Система рівнів і прогрес бару
-function updateLevel(points) {
-    const userData = loadFromDatabase();
-    let requiredPoints = (userData.level) * 5;
-    userData.points += points;
-
-    if (userData.points >= requiredPoints) {
-        userData.level += 1;
-        userData.points = 0;
-        requiredPoints = (userData.level) * 5;
+    if (existingUserIndex >= 0) {
+        userData.friendsList = allUsers[existingUserIndex].friendsList || [];
+        allUsers[existingUserIndex] = userData;
+    } else {
+        allUsers.push(userData);
     }
 
-    const progressPercentage = (userData.points / requiredPoints) * 100;
-    document.querySelector(".progress").style.width = `${progressPercentage}%`;
-    document.querySelector(".level").textContent = `${userData.level} LVL`;
-
-    saveToDatabase(userData);
+    localStorage.setItem("allUsers", JSON.stringify(allUsers));
 }
 
-// Завдання
-function openTasks() {
-    document.getElementById("interface-screen").style.display = "none";
-    document.getElementById("tasks-screen").style.display = "block";
+// Обробка реферального коду
+function processReferral(referralCode, newUserId) {
+    let allUsers = JSON.parse(localStorage.getItem("allUsers")) || [];
 
-    const tasks = [
-        { id: 1, description: "Subscribe to Telegram Channel", points: 10 }
-    ];
-    document.getElementById("tasks-list").innerHTML = tasks.map(task => `<p>${task.description} - ${task.points} points</p>`).join("");
-}
+    const referringUserIndex = allUsers.findIndex(user => user.referralCode === referralCode);
 
-// Lucky Wheel
-function openWheel() {
-    document.getElementById("interface-screen").style.display = "none";
-    document.getElementById("wheel-screen").style.display = "block";
-    setupWheel();
-}
+    if (referringUserIndex >= 0) {
+        const referringUser = allUsers[referringUserIndex];
 
-function setupWheel() {
-    const canvas = document.getElementById("wheel-canvas");
-    const ctx = canvas.getContext("2d");
-    const segments = ["1 point", "5 points", "10 points", "20 points", "50 points"];
-    let angle = 0;
-
-    function drawWheel() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (let i = 0; i < segments.length; i++) {
-            ctx.beginPath();
-            ctx.moveTo(200, 200);
-            ctx.arc(200, 200, 200, angle, angle + Math.PI / 3);
-            ctx.fillStyle = i % 2 === 0 ? "red" : "blue";
-            ctx.fill();
-            angle += Math.PI / 3;
+        if (!referringUser.friendsList) {
+            referringUser.friendsList = [];
         }
+        referringUser.friendsList.push(newUserId);
+
+        referringUser.friends += 1;
+        referringUser.points += 5;
+
+        allUsers[referringUserIndex] = referringUser;
+        localStorage.setItem("allUsers", JSON.stringify(allUsers));
+
+        console.log(`Користувачу ${referringUser.name} додано 5 балів за запрошення.`);
     }
-    drawWheel();
 }
 
-document.getElementById("spin-button").addEventListener("click", function() {
-    const points = Math.floor(Math.random() * 50) + 1;
-    updateLevel(points);
-});
+// Відображення списку друзів
+function showFriendsList(userId) {
+    const allUsers = JSON.parse(localStorage.getItem("allUsers")) || [];
+    const currentUser = allUsers.find(user => user.id === userId);
 
-// Функція для повернення до інтерфейсу
-function goBack() {
-    document.getElementById("friends-screen").style.display = "none";
-    document.getElementById("tasks-screen").style.display = "none";
-    document.getElementById("market-screen").style.display = "none";
-    document.getElementById("wheel-screen").style.display = "none";
-    document.getElementById("interface-screen").style.display = "block";
+    if (currentUser && currentUser.friendsList && currentUser.friendsList.length > 0) {
+        const friendsList = document.getElementById("friends-list");
+        friendsList.innerHTML = '';
+
+        currentUser.friendsList.forEach(friendId => {
+            const friend = allUsers.find(user => user.id === friendId);
+            if (friend) {
+                const friendItem = document.createElement('p');
+                friendItem.textContent = `${friend.name} (ID: ${friend.id})`;
+                friendsList.appendChild(friendItem);
+            }
+        });
+    } else {
+        document.getElementById("friends-list").textContent = "У вас поки немає друзів.";
+    }
 }
 
-// Друзі
+// Відображення сторінки друзів
 function openFriends() {
     document.getElementById("interface-screen").style.display = "none";
     document.getElementById("friends-screen").style.display = "block";
 
-    const userData = loadFromDatabase();
-    document.getElementById("referral-link").textContent = `Your referral link: t.me/wellact_bot/ref=${userData.referralCode}`;
+    const userData = JSON.parse(localStorage.getItem("userData"));
+    if (userData) {
+        showFriendsList(userData.id);
+        document.getElementById("referral-link").textContent = `Your referral link: https://t.me/YOUR_BOT_USERNAME?start=${userData.referralCode}`;
+    }
+}
+
+// Повернення назад до основного інтерфейсу
+function goBack() {
+    document.getElementById("friends-screen").style.display = "none";
+    document.getElementById("interface-screen").style.display = "block";
 }
