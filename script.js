@@ -121,7 +121,7 @@ function openFriends() {
     const userData = JSON.parse(localStorage.getItem("userData"));
     if (userData) {
         showFriendsList(userData.id);
-        document.getElementById("referral-link").textContent = `Your referral link: https://t.me/YOUR_BOT_USERNAME?start=${userData.referralCode}`;
+        document.getElementById("referral-link").textContent = `Your referral link: https://t.me/devionsxtest_bot?start=${userData.referralCode}`;
     }
 }
 
